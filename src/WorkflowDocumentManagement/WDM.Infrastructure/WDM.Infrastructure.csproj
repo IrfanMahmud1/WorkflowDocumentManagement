@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WDM.Applicatiion\WDM.Applicatiion.csproj" />
     <ProjectReference Include="..\WDM.Domain\WDM.Domain.csproj" />
   </ItemGroup>
 

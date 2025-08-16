@@ -8,8 +8,8 @@ namespace WDM.Domain.Entities
 {
     public abstract class AuditableEntity
     {
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public Guid CreatedBy { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

@@ -14,6 +14,25 @@ namespace WDM.Infrastructure
             : base(options)
         {
         }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>().Property(x =>
+            x.CreatedDate).HasDefaultValueSql("GETDATE()");
+
+            modelBuilder.Entity<User>()
+                .HasData(
+                new User
+                {
+                    Id = new Guid("8C647159-9A27-43C9-AA21-115E9DDDEE9E"),
+                    Email = "irfan@gmail.com",
+                    Password = "admin12345",
+                    UserName = "admin",
+                    AccessLevel = "Read-Write",
+                    CreatedBy = new Guid("8C647159-9A27-43C9-AA21-115E9DDDEE9E"),
+                    CreatedDate = new DateTime(2025, 8, 17, 19, 31, 26, DateTimeKind.Utc),
+                });
+            base.OnModelCreating(modelBuilder);
+        }
 
         public DbSet<User> Users { get; set; }
     }
