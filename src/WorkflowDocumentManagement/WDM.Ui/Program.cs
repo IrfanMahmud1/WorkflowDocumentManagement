@@ -8,6 +8,7 @@ using WDM.Infrastructure;
 using WDM.Infrastructure.Repositories;
 using WDM.Infrastructure.Security;
 using WDM.Ui.Middlewares;
+using WDM.Ui.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // JWT Configuration
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
-
+// In your Razor Pages project (Program.cs or Startup.cs)
+builder.Services.AddHttpClient<IUserService, UserService>(client => {
+    client.BaseAddress = new Uri("https://localhost:7194/api/"); // Your API base URL
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

@@ -10,9 +10,9 @@ namespace WDM.Domain.Repositories
     {
         Task<IEnumerable<T>> GetAllAsync();
         Task<T?> GetByIdAsync(Guid id);
-        Task<Guid> AddAsync(T entity);
+        Task<bool> AddAsync(T entity);
         Task<bool> UpdateAsync(T entity);
         Task<bool> DeleteAsync(Guid id);
-        Task<bool> ExistsAsync(Guid id);
+        Task<bool> ExistsAsync(Guid id,string email);
     }
 }

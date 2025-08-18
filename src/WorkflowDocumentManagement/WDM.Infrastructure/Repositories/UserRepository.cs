@@ -1,8 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -80,8 +78,13 @@ namespace WDM.Infrastructure.Repositories
             return await reader.ReadAsync() ? MapUserFromReader(reader) : null;
         }
 
-        public async Task<Guid> AddAsync(User user)
+        public async Task<bool> AddAsync(User user)
         {
+            var person = await GetByEmailAsync(user.Email);
+            if (person != null)
+            {
+                return false; // Email already exists for another user
+            }
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
             {
@@ -105,11 +108,15 @@ namespace WDM.Infrastructure.Repositories
             await command.ExecuteNonQueryAsync();
             await connection.CloseAsync();
 
-            return user.Id;
+            return true;
         }
 
         public async Task<bool> UpdateAsync(User user)
         {
+            if (await ExistsAsync(user.Id,user.Email))
+            {
+                return false; // Email already exists for another user
+            }
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
             {
@@ -153,7 +160,7 @@ namespace WDM.Infrastructure.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<bool> ExistsAsync(Guid id)
+        public async Task<bool> ExistsAsync(Guid id,string email)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
@@ -163,6 +170,7 @@ namespace WDM.Infrastructure.Repositories
 
             command.Parameters.Add(new SqlParameter("@Action", "EXISTS"));
             command.Parameters.Add(new SqlParameter("@Id", id));
+            command.Parameters.Add(new SqlParameter("@Email", email ?? (object)DBNull.Value));
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();

@@ -9,6 +9,7 @@ using WDM.Domain.Services;
 using WDM.Infrastructure;
 using WDM.Infrastructure.Repositories;
 using WDM.Infrastructure.Security;
+using WDM.Ui.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(jwtSettings?.SecretKey ?? throw new InvalidOperationException()))
         };
     });
+
+builder.Services.AddHttpClient<IUserService, UserService>(client => {
+    client.BaseAddress = new Uri("https://localhost:7194/api/"); // Your API base URL
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddAuthorization();
 
