@@ -10,20 +10,20 @@ using WDM.Domain.Repositories;
 
 namespace WDM.Infrastructure.Repositories
 {
-    public class UserRepository : IUserRepository
+    public class DocumentTypeRepository : IDocumentTypeRepository
     {
         private readonly string _connectionString;
-        private const string StoredProcedureName = "sp_User_Management";
+        private const string StoredProcedureName = "sp_DocumentType_Operations";
 
-        public UserRepository( IConfiguration configuration)
+        public DocumentTypeRepository( IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection") 
                                 ?? throw new ArgumentNullException("Connection string 'DefaultConnection' not found.");
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync()
+        public async Task<IEnumerable<DocumentType>> GetAllAsync()
         {
-            var users = new List<User>();
+            var users = new List<DocumentType>();
 
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
@@ -44,7 +44,7 @@ namespace WDM.Infrastructure.Repositories
             return users;
         }
 
-        public async Task<User> GetByIdAsync(Guid id)
+        public async Task<DocumentType> GetByIdAsync(Guid id)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
@@ -61,7 +61,7 @@ namespace WDM.Infrastructure.Repositories
             return await reader.ReadAsync() ? MapUserFromReader(reader) : null;
         }
 
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task<DocumentType> GetByNameAsync(string name)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
@@ -69,8 +69,8 @@ namespace WDM.Infrastructure.Repositories
                 CommandType = CommandType.StoredProcedure
             };
 
-            command.Parameters.Add(new SqlParameter("@Action", "GET_BY_EMAIL"));
-            command.Parameters.Add(new SqlParameter("@Email", email ?? (object)DBNull.Value));
+            command.Parameters.Add(new SqlParameter("@Action", "GET_BY_NAME"));
+            command.Parameters.Add(new SqlParameter("@Name", name ?? (object)DBNull.Value));
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -78,9 +78,9 @@ namespace WDM.Infrastructure.Repositories
             return await reader.ReadAsync() ? MapUserFromReader(reader) : null;
         }
 
-        public async Task<bool> AddAsync(User user)
+        public async Task<bool> AddAsync(DocumentType user)
         {
-            var person = await GetByEmailAsync(user.Email);
+            var person = await GetByNameAsync(user.Name);
             if (person != null)
             {
                 return false; // Email already exists for another user
@@ -95,10 +95,8 @@ namespace WDM.Infrastructure.Repositories
             {
             new SqlParameter("@Action", "INSERT"),
             new SqlParameter("@Id", user.Id),
-            new SqlParameter("@Email", user.Email ?? (object)DBNull.Value),
-            new SqlParameter("@Password", user.Password ?? (object)DBNull.Value),
-            new SqlParameter("@UserName", user.UserName ?? (object)DBNull.Value),
-            new SqlParameter("@AccessLevel", user.AccessLevel ?? (object)DBNull.Value),
+            new SqlParameter("@Name", user.Name ?? (object)DBNull.Value),
+            new SqlParameter("@Description", user.Description ?? (object)DBNull.Value),
             new SqlParameter("@CreatedDate", user.CreatedDate),
             new SqlParameter("@CreatedBy", user.CreatedBy),
             new SqlParameter("@IsActive", user.IsActive)
@@ -111,9 +109,9 @@ namespace WDM.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<bool> UpdateAsync(User user)
+        public async Task<bool> UpdateAsync(DocumentType user)
         {
-            if (await ExistsAsync(user.Id,user.Email))
+            if (await ExistsAsync(user.Id,user.Name))
             {
                 return false; // Email already exists for another user
             }
@@ -127,9 +125,8 @@ namespace WDM.Infrastructure.Repositories
             {
             new SqlParameter("@Action", "UPDATE"),
             new SqlParameter("@Id", user.Id),
-            new SqlParameter("@Email", user.Email ?? (object)DBNull.Value),
-            new SqlParameter("@UserName", user.UserName ?? (object)DBNull.Value),
-            new SqlParameter("@AccessLevel", user.AccessLevel ?? (object)DBNull.Value),
+            new SqlParameter("@Name", user.Name ?? (object)DBNull.Value),
+            new SqlParameter("@Description", user.Description ?? (object)DBNull.Value),
             new SqlParameter("@IsActive", user.IsActive)
         });
 
@@ -160,7 +157,7 @@ namespace WDM.Infrastructure.Repositories
             return rowsAffected != null && Convert.ToInt32(rowsAffected) > 0;
         }
 
-        public async Task<bool> ExistsAsync(Guid id,string email)
+        public async Task<bool> ExistsAsync(Guid id,string name)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand(StoredProcedureName, connection)
@@ -170,7 +167,7 @@ namespace WDM.Infrastructure.Repositories
 
             command.Parameters.Add(new SqlParameter("@Action", "EXISTS"));
             command.Parameters.Add(new SqlParameter("@Id", id));
-            command.Parameters.Add(new SqlParameter("@Email", email ?? (object)DBNull.Value));
+            command.Parameters.Add(new SqlParameter("@Name", name ?? (object)DBNull.Value));
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -179,38 +176,17 @@ namespace WDM.Infrastructure.Repositories
             return result != null && (int)result == 1;
         }
 
-        private static User MapUserFromReader(SqlDataReader reader)
+        private static DocumentType MapUserFromReader(SqlDataReader reader)
         {
-            return new User
+            return new DocumentType
             {
                 Id = reader.GetGuid("Id"),
-                Email = reader.IsDBNull("Email") ? null : reader.GetString("Email"),
-                Password = reader.IsDBNull("Password") ? null : reader.GetString("Password"),
-                UserName = reader.IsDBNull("UserName") ? null : reader.GetString("UserName"),
-                AccessLevel = reader.IsDBNull("AccessLevel") ? null : reader.GetString("AccessLevel"),
+                Name = reader.IsDBNull("Name") ? null : reader.GetString("Name"),
+                Description = reader.IsDBNull("Description") ? null : reader.GetString("Description"),
                 CreatedDate = reader.GetDateTime("CreatedDate"),
                 CreatedBy = reader.GetGuid("CreatedBy"),
                 IsActive = reader.GetBoolean("IsActive")
             };
-        }
-
-        public async Task<bool> ValidateCredentialsAsync(string email, string password)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand(StoredProcedureName, connection)
-            {
-                CommandType = CommandType.StoredProcedure
-            };
-
-            command.Parameters.Add(new SqlParameter("@Action", SqlDbType.VarChar) { Value = "VALIDATE_CREDENTIALS" });
-            command.Parameters.Add(new SqlParameter("@Email", SqlDbType.VarChar) { Value = email ?? (object)DBNull.Value });
-            command.Parameters.Add(new SqlParameter("@Password", SqlDbType.VarChar) { Value = password ?? (object)DBNull.Value });
-
-            await connection.OpenAsync();
-            var result = await command.ExecuteScalarAsync();
-            await connection.CloseAsync(); // Explicit close (though using statement handles this automatically)
-
-            return Convert.ToInt32(result) == 1;
         }
 
     }

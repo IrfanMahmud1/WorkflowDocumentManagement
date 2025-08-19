@@ -34,7 +34,13 @@ builder.Services.AddHttpClient<IUserService, UserService>(client => {
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+builder.Services.AddHttpClient<IDocumentTypeService, DocumentTypeService>(client => {
+    client.BaseAddress = new Uri("https://localhost:7194/api/"); // Your API base URL
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(50);
+});
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 var app = builder.Build();

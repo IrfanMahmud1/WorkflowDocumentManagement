@@ -1,0 +1,68 @@
+﻿@page
+@model WDM.Ui.Pages.DocumentTypes.DeleteModel
+@{
+    ViewData["Title"] = "Delete Document Type";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Delete Document Type
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning!</strong> Are you sure you want to delete this document type? This action cannot be undone.
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-3">Name:</dt>
+                        <dd class="col-sm-9">@Model.DocumentType.Name</dd>
+
+                        <dt class="col-sm-3">Description:</dt>
+                        <dd class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.DocumentType.Description))
+                            {
+                                @Model.DocumentType.Description
+                            }
+                            else
+                            {
+                                <em class="text-muted">No description provided</em>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Status:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.DocumentType.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactive</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Created Date:</dt>
+                        <dd class="col-sm-9">@Model.DocumentType.CreatedDate.ToString("MMMM dd, yyyy")</dd>
+                    </dl>
+
+                    <form method="post">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-page="./Index" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete Document Type
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

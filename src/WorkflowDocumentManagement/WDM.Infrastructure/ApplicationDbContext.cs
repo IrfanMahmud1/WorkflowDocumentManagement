@@ -35,5 +35,6 @@ namespace WDM.Infrastructure
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<DocumentType> DocumentTypes { get; set; }
     }
 }
